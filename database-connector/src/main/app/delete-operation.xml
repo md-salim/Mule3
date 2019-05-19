@@ -9,7 +9,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
     <flow name="delete-operationFlow">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/delete" doc:name="HTTP"/>
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/delete" doc:name="HTTP" allowedMethods="DELETE"/>
         <logger message="#[&quot;it is going to delet data&quot;]" level="INFO" doc:name="Logger"/>
         <dw:transform-message doc:name="Transform Message">
         	<dw:set-variable variableName="empid"><![CDATA[%dw 1.0
