@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <file:connector name="File" autoDelete="true" streaming="true" validateConnections="true" doc:name="File"/>
+    <flow name="file-FlowA">
+        <file:inbound-endpoint path="src/main/resources/file-flowA" moveToPattern="#[&quot;members_&quot; + server.dateTime.format('yyyyMMddHHmmss') + &quot;.csv&quot;]" moveToDirectory="src/main/resources/Move" connector-ref="File" responseTimeout="10000" doc:name="File">
+        </file:inbound-endpoint>
+
+        <logger level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="8a90a799-04bb-4bb3-8e53-0e0b65005798">
+            <dw:input-payload doc:sample="members.csv" mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	details: {
+		members @(count: sizeOf payload): {
+			(payload map ((payload01 , indexOfPayload01) -> {
+				member: {
+					name: payload01.Name,
+					qualification: payload01.Qualification,
+					address: payload01.Address,
+					age: payload01.Age as :number
+				}
+			}))
+		}
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <file:outbound-endpoint path="src/main/resources/file-flowB" connector-ref="File" responseTimeout="10000" doc:name="File" outputPattern="#[&quot;members_&quot; + server.dateTime.format('yyyymmddHHMMss') + &quot;.xml&quot;]"/>
+        <logger level="INFO" doc:name="Logger" message="Done writing."/>
+    </flow>
+</mule>
