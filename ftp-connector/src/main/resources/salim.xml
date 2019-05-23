@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<details>
+  <members>
+    <member>
+      <name>jashim</name>
+      <age>23</age>
+      <address>Hriharganj</address>
+      <salary>2364</salary>
+    </member>
+    <member>
+      <name>salim</name>
+      <age>35</age>
+      <address>Gurgaon</address>
+      <salary>1203</salary>
+    </member>
+    </members>
+    </details>
