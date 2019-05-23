@@ -9,6 +9,8 @@ http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/jso
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <db:oracle-config name="Oracle_Configuration" host="${oracle.host}" port="${oracle.port}" instance="${oracle.instance}" user="${oracle.username}" password="${oracle.password}" doc:name="Oracle Configuration"/>
     <flow name="select-operationFlow">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/select" doc:name="HTTP"/>
         <logger message="select operation started" level="INFO" doc:name="Logger"/>
