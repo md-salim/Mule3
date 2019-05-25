@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <http:request-config name="HTTP_Request_Configuration" host="localhost" port="8081" doc:name="HTTP Request Configuration"/>
+    <flow name="http-connectorFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/test" doc:name="HTTP">
+            <http:response-builder  >
+                <http:header headerName="name" value="Sonu"/>
+            </http:response-builder>
+            <http:error-response-builder  >
+                <http:header headerName="name" value="Salim"/>
+            </http:error-response-builder>
+        </http:listener>
+        <logger level="INFO" doc:name="Logger"/>
+        <set-payload value="my response" doc:name="Set Payload"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/new/{age}" method="POST" source="#[payload]" target="#[flowVars.message1]" doc:name="HTTP">
+            <http:request-builder>
+                <http:query-params expression="#[ {&quot;name&quot;:&quot;Salim12&quot;,&quot;sal&quot;:2000} ]"/>
+                <http:uri-param paramName="age" value="13"/>
+                <http:header headerName="address" value="Gurgaon1234"/>
+            </http:request-builder>
+            <http:success-status-code-validator values="101..399,400"/>
+        </http:request>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-variable variableName="a2"><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	a: flowVars.message1
+}]]></dw:set-variable>
+        </dw:transform-message>
+        <logger message="#[&quot;message is: &quot; + String.valueOf(flowVars.a2)]" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="http-connectorFlow1">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/new/{age}" doc:name="HTTP">
+            <http:response-builder statusCode="400"/>
+        </http:listener>
+        <set-payload value="#[&quot;your sal is: &quot; + message.inboundProperties.'http.query.params'.sal + &quot;your name is: &quot; + message.inboundProperties.'http.query.params'.name + &quot; , Your age is: &quot; + message.inboundProperties.'http.uri.params'.age + &quot; , Your address is: &quot; + message.inboundProperties.'address'  ]" doc:name="Set Payload"/>
+    </flow>
+</mule>
