@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <vm:connector name="VM" validateConnections="true" doc:name="VM"/>
+	<flow name="vm-connectorFlow">
+        <vm:inbound-endpoint exchange-pattern="one-way" path="myvm" connector-ref="VM" doc:name="VM"/>
+        <logger message="#[&quot;Consumed message:             &quot; + message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+        	<dw:input-payload mimeType="application/json"/>
+            <dw:set-variable variableName="empid"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empid as :number]]></dw:set-variable>
+            <dw:set-variable variableName="empFirstName"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empFirstName]]></dw:set-variable>
+            <dw:set-variable variableName="empMiddleName"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empMiddleName]]></dw:set-variable>
+            <dw:set-variable variableName="empLastName"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empLastName]]></dw:set-variable>
+            <dw:set-variable variableName="empsal"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empsal as :number]]></dw:set-variable>
+            <dw:set-variable variableName="empAddress"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empAddress]]></dw:set-variable>
+            <dw:set-variable variableName="empAge"><![CDATA[%dw 1.0
+%output application/java
+---
+payload.empAge as :number]]></dw:set-variable>
+        </dw:transform-message>
+        <db:insert config-ref="Oracle_Configuration" doc:name="createEmployee">
+            <db:parameterized-query><![CDATA[insert into emp values(#[flowVars.empid] , #[flowVars.empFirstName] , #[flowVars.empMiddleName] , #[flowVars.empLastName] , #[flowVars.empsal] , #[flowVars.empAddress] , #[flowVars.empAge] )]]></db:parameterized-query>
+        </db:insert>
+        <logger message="#[message.payloadAs(java.lang.String) == &quot;1&quot; ? &quot;success&quot; : &quot;Failed&quot;]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+
+{
+	"message": "success" when payload[0] >= 1 otherwise "No record created"
+}]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="publish-to-activeMQ">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/queue" doc:name="HTTP"/>
+        <logger message="publish-to-activeMQ started #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+        <vm:outbound-endpoint exchange-pattern="one-way" path="myvm" connector-ref="VM" doc:name="VM"/>
+        <set-payload value="#[&quot;Your request is processed and you will be notified through mail&quot;]" doc:name="Set Payload"/>
+    </flow>
+
+
+
+</mule>
